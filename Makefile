@@ -14,3 +14,8 @@ clean:
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ $(CFLAGS)
+
+
+# run valgrind
+memory: $(APP)
+	valgrind -s --leak-check=full  ./$(APP) testcases/2.txt
