@@ -86,7 +86,6 @@ size_t remove_from_tail(struct linked_list *list) {
 }
 
 // frees memory of all nodes in list
-// TODO - this might need to free the elements that the list points to as well...
 void free_list(struct linked_list list) {
   struct list_node *node = list.head;
   while (node != NULL) {
