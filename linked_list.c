@@ -16,43 +16,62 @@ struct list_node *new_node(size_t value) {
   return new_node;
 }
 
+// the code spends 99% of its time iterating over the linked list
+// so these functions are modified to allow O(1) insertions at both ends, and O(1) removals from the head
+// the "head" of the list now contains pointers to the head and tail nodes
+
 // creates a new node and inserts at the head of a linked list
 // the new node now points to the old head
 void insert_at_head(struct linked_list *list, size_t value) {
-  struct list_node *old_head = list->head;
-  list->head = new_node(value);
-  list->head->next = old_head;
+  if (list->head == NULL) { // if the list is not init, create a head node that points to NULL, NULL
+    list->head = new_node((size_t)NULL);
+  }
+
+  struct list_node *node_to_add = new_node(value);
+  if (list->head->next == NULL) { // list is empty, so new node becomes the head and tail
+    list->head->next = node_to_add;
+    list->head->value = (size_t)node_to_add;
+    return;
+  }
+
+  node_to_add->next = list->head->next; // new node points at current first node
+  list->head->next = node_to_add;       // list now treats new node as the first node
 }
 
 // creates a new node and inserts at the tail of a linked list
 // the previous tail now points to the new node
 void insert_at_tail(struct linked_list *list, size_t value) {
-  struct list_node *new_tail = new_node(value);
-
-  struct list_node *old_tail = list->head;
-  if (old_tail == NULL) {
-    list->head = new_tail;
-  } else {
-    while (old_tail->next != NULL) {
-      old_tail = old_tail->next;
-    }
-    old_tail->next = new_tail;
+  if (list->head == NULL) { // if the list is not init, create a head node that points to NULL, NULL
+    list->head = new_node((size_t)NULL);
   }
+
+  struct list_node *node_to_add = new_node(value);
+  if (list->head->next == NULL) { // list is empty, so new node becomes the head and tail
+    list->head->next = node_to_add;
+    list->head->value = (size_t)node_to_add;
+    return;
+  }
+
+  ((struct list_node *)(list->head->value))->next = node_to_add; // tail node now points to new node
+  list->head->value = (size_t)node_to_add;                       // head contains ref to the tail node
 }
 
 // returns the value of the current head node
 // head now points to the 2nd node
 // if list is empty, returns 0
 size_t remove_from_head(struct linked_list *list) {
-  struct list_node *old_head = list->head;
-
-  if (old_head == NULL) {
+  if (list->head == NULL) { // list is not init
     return 0;
   }
 
-  list->head = old_head->next;
-  size_t value = old_head->value;
-  free(old_head);
+  if (list->head->next == NULL) { // list is empty
+    return 0;
+  }
+
+  size_t value = list->head->next->value;
+  struct list_node *new_head = list->head->next->next;
+  free(list->head->next);
+  list->head->next = new_head;
   return value;
 }
 
@@ -60,18 +79,24 @@ size_t remove_from_head(struct linked_list *list) {
 // final node now points to NULL
 // if list is empty, returns 0
 size_t remove_from_tail(struct linked_list *list) {
-  struct list_node *current_node = list->head;
-
-  // list is empty
-  if (current_node == NULL) {
+  if (list->head == NULL) { // list is not init
     return 0;
   }
+
+  if (list->head->next == NULL) { // list is empty
+    return 0;
+  }
+
+  struct list_node *current_node = list->head->next;
 
   // list only has one element
   if (current_node->next == NULL) {
     size_t value = current_node->value;
+
+    list->head->value = (size_t)NULL;
+    list->head->next = NULL;
+
     free(current_node);
-    list->head = NULL;
     return value;
   }
 
@@ -79,6 +104,7 @@ size_t remove_from_tail(struct linked_list *list) {
   while (current_node->next->next != NULL) {
     current_node = current_node->next;
   }
+  list->head->value = (size_t)current_node;
   size_t value = current_node->next->value;
   free(current_node->next);
   current_node->next = NULL;
