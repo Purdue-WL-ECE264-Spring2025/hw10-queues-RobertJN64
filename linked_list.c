@@ -72,6 +72,9 @@ size_t remove_from_head(struct linked_list *list) {
   struct list_node *new_head = list->head->next->next;
   free(list->head->next);
   list->head->next = new_head;
+  if (new_head == NULL) {
+    list->head->value = (size_t)NULL;
+  }
   return value;
 }
 
